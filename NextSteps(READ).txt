@@ -1,0 +1,22 @@
+Your next steps would be:
+
+1. Download Data: Get IEMOCAP or CREMA-D and place the relevant audio files/folders into data/raw/.
+
+2. Adapt data_loader.py: Modify find_audio_files and parse_label_from_filepath to correctly locate your audio files
+and extract their emotion labels based on the specific dataset's structure and naming conventions. 
+Focus on identifying the labels relevant to your project (especially frustration, anger, neutral).
+
+3. Run data_loader.py: Execute the script to process the raw audio into segments.
+
+4.  feature_extractor.py: Review the feature parameters (N_MFCC, N_FFT, etc.). 
+You might need to add padding/truncation logic here or in the data loader
+to ensure all feature vectors/matrices have consistent dimensions for model input.
+
+5. Run feature_extractor.py: Execute the script to generate MFCC and Spectrogram features from the processed segments.
+
+6. Explore Data (notebooks/): Use the notebooks to load the features and labels, visualize them, and understand the data distribution.
+
+7. Implement train.py and evaluate.py: Write the scripts to load features/labels, instantiate a model from model.py, train it, 
+evaluate its performance using metrics from scikit-learn.
+
+8. Refine Models (model.py): Adjust the model architectures based on initial results and exploration.
