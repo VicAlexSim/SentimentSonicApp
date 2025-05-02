@@ -15,39 +15,51 @@ SEGMENT_LENGTH_SEC = 3 # Example segment length
 
 def find_audio_files(data_dir):
     """
-    Recursively finds all audio files (e.g., .wav) in the specified directory.
-    Needs implementation based on dataset structure (IEMOCAP/CREMA-D).
-    Returns a list of file paths and potentially corresponding labels.
+    Loads audio paths and labels from IEMOCAP metadata and from CREMA-D filenames.
+    Returns two lists: file paths and emotion labels.
     """
-    print(f"Searching for audio files in: {data_dir}")
-    # Placeholder: Replace with actual logic for IEMOCAP/CREMA-D parsing
     audio_files = []
     labels = []
-    # Example: Iterate through subfolders, parse filenames or metadata files
-    # for root, dirs, files in os.walk(data_dir):
-    #     for file in files:
-    #         if file.endswith('.wav'):
-    #             filepath = os.path.join(root, file)
-    #             label = parse_label_from_filepath(filepath) # Needs implementation
-    #             audio_files.append(filepath)
-    #             labels.append(label)
-    print("Placeholder: Implement actual file finding and label parsing logic.")
+
+    # 1. IEMOCAP (assumes CSV is in ../data/metadata/)
+    iemocap_metadata_path = os.path.join('../data/metadata/iemocap_metadata.csv')
+    if os.path.exists(iemocap_metadata_path):
+        df = pd.read_csv(iemocap_metadata_path)
+        target_emotions = ['fru', 'ang', 'neu']
+        df = df[df['emotion'].isin(target_emotions)]
+        df['full_path'] = df['path'].apply(lambda p: os.path.join(data_dir, p))
+        audio_files += df['full_path'].tolist()
+        labels += df['emotion'].tolist()
+        print(f"IEMOCAP: Loaded {len(df)} labeled files.")
+
+    # 2. CREMA-D (parse from filenames)
+    crema_dir = os.path.join(data_dir, 'crema-d')
+    if os.path.exists(crema_dir):
+        for file in os.listdir(crema_dir):
+            if file.endswith('.wav'):
+                label = parse_label_from_filepath(file)
+                if label in ['anger', 'neutral']:  # Only include relevant ones
+                    audio_files.append(os.path.join(crema_dir, file))
+                    labels.append(label)
+        print(f"CREMA-D: Loaded {len(audio_files)} files after filtering.")
+
     return audio_files, labels
 
-def parse_label_from_filepath(filepath):
+def parse_label_from_filepath(filename):
     """
-    Extracts the emotion label from the file path or associated metadata.
-    This will be specific to the dataset being used (IEMOCAP/CREMA-D).
-    Needs implementation.
+    Extract emotion code from CREMA-D filename, e.g., '1001_IEO_ANG_XX.wav' → 'ANG' → 'anger'
     """
-    # Placeholder: Implement logic based on dataset naming conventions or metadata
-    # Example for CREMA-D (hypothetical): '1001_IEO_ANG_XX.wav' -> 'ANG' (Anger)
-    filename = os.path.basename(filepath)
     parts = filename.split('_')
     if len(parts) > 2:
         emotion_code = parts[2]
-        # Map code to desired label (e.g., 'ANG' -> 'anger', 'FRU' -> 'frustration')
-        emotion_map = {'ANG': 'anger', 'HAP': 'happy', 'SAD': 'sad', 'NEU': 'neutral', 'FRU': 'frustration'} # Add others
+        emotion_map = {
+            'ANG': 'anger',
+            'HAP': 'happy',
+            'SAD': 'sad',
+            'NEU': 'neutral',
+            'DIS': 'disgust',
+            'FEA': 'fear'
+        }
         return emotion_map.get(emotion_code, 'unknown')
     return 'unknown'
 

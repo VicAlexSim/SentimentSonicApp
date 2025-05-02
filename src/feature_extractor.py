@@ -14,6 +14,22 @@ N_MELS = 128      # Number of Mel bands for spectrogram
 
 PROCESSED_DATA_DIR = '../data/processed/'
 FEATURES_DIR = '../data/features/' # New directory for features
+MAX_MFCC_TIME_STEPS = 400  # Adjust based on your segment length
+MAX_SPEC_TIME_STEPS = 400  # Same here (just to keep shapes aligned)
+
+def pad_or_truncate_feature(feature, max_len):
+    """
+    Pads or truncates a 2D feature array to (max_len, feature_dim)
+    """
+    current_len = feature.shape[1]
+    if current_len > max_len:
+        return feature[:, :max_len]
+    elif current_len < max_len:
+        pad_width = max_len - current_len
+        return np.pad(feature, ((0, 0), (0, pad_width)), mode='constant')
+    else:
+        return feature
+
 
 def extract_mfcc(audio_segment, sr=SAMPLE_RATE, n_mfcc=N_MFCC, n_fft=N_FFT, hop_length=HOP_LENGTH):
     """
@@ -70,9 +86,13 @@ def process_features(processed_data_dir, features_dir):
         spectrogram = extract_spectrogram(segment)
 
         if mfcc is not None and spectrogram is not None:
-            all_mfccs.append(mfcc)
-            all_spectrograms.append(spectrogram)
-            valid_labels.append(labels[i]) # Keep label for valid features
+            # Pad or truncate to consistent time steps
+            mfcc_padded = pad_or_truncate_feature(mfcc, MAX_MFCC_TIME_STEPS)
+            spec_padded = pad_or_truncate_feature(spectrogram, MAX_SPEC_TIME_STEPS)
+
+            all_mfccs.append(mfcc_padded)
+            all_spectrograms.append(spec_padded)
+            valid_labels.append(labels[i])
         else:
             print(f"Skipping segment {i+1} due to feature extraction error.")
 
@@ -93,8 +113,8 @@ def process_features(processed_data_dir, features_dir):
     # Need to ensure features have consistent shapes before saving as single array
     # This might involve padding or choosing a fixed length
     # Placeholder: Save as object array, requires careful loading later
-    np.save(mfccs_path, np.array(all_mfccs, dtype=object), allow_pickle=True)
-    np.save(spectrograms_path, np.array(all_spectrograms, dtype=object), allow_pickle=True)
+    np.save(mfccs_path, np.array(all_mfccs), allow_pickle=False)
+    np.save(spectrograms_path, np.array(all_spectrograms), allow_pickle=False)
     np.save(feature_labels_path, np.array(valid_labels))
 
     print(f"Extracted features for {len(valid_labels)} segments.")
