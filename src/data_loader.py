@@ -21,13 +21,15 @@ def find_audio_files(data_dir):
     audio_files = []
     labels = []
 
-    # 1. IEMOCAP (assumes CSV is in ../data/metadata/)
-    iemocap_metadata_path = os.path.join('../data/metadata/iemocap_metadata.csv')
-    if os.path.exists(iemocap_metadata_path):
+    # 1. IEMOCAP (CSV is in ../data/metadata/)
+    iemocap_metadata_path = os.path.join('../data/metadata/iemocap_full_dataset.csv')
+    iemocap_audio_root = os.path.join(data_dir, "iemocap", "iemocap_full_database")
+
+    if os.path.exists(iemocap_metadata_path) and os.path.exists(iemocap_audio_root):
         df = pd.read_csv(iemocap_metadata_path)
-        target_emotions = ['fru', 'ang', 'neu']
+        target_emotions = ['fru', 'ang', 'neu', 'hap', 'sad']
         df = df[df['emotion'].isin(target_emotions)]
-        df['full_path'] = df['path'].apply(lambda p: os.path.join(data_dir, p))
+        df['full_path'] = df['path'].apply(lambda p: os.path.normpath(os.path.join(data_dir, "iemocap", "iemocap_full_database", p)))
         audio_files += df['full_path'].tolist()
         labels += df['emotion'].tolist()
         print(f"IEMOCAP: Loaded {len(df)} labeled files.")
@@ -38,10 +40,26 @@ def find_audio_files(data_dir):
         for file in os.listdir(crema_dir):
             if file.endswith('.wav'):
                 label = parse_label_from_filepath(file)
-                if label in ['anger', 'neutral']:  # Only include relevant ones
+                if label in ['anger', 'happy', 'sad', 'neutral', 'frustration']:
                     audio_files.append(os.path.join(crema_dir, file))
                     labels.append(label)
         print(f"CREMA-D: Loaded {len(audio_files)} files after filtering.")
+
+    # Normalize label names (so IEMOCAP and CREMA-D match)
+    label_map = {
+        'fru': 'frustration',
+        'ang': 'anger',
+        'neu': 'neutral',
+        'hap': 'happy',
+        'sad': 'sad',
+        'frustration': 'frustration',  # already mapped from CREMA-D
+        'anger': 'anger',
+        'neutral': 'neutral',
+        'happy': 'happy',
+        'sad': 'sad'
+    }
+
+    labels = [label_map.get(lbl, lbl) for lbl in labels]
 
     return audio_files, labels
 
