@@ -71,44 +71,44 @@ SentimentSonic_Project/
 
 ## Setup
  
-    1. Clone the repository.
-    2. Create a virtual environment (recommended):
-        ```bash
-        python -m venv venv
-        source venv/bin/activate # On Windows use `venv\Scripts\activate`
-        ```
-    3. Install the required libraries:
-        ```bash
-        pip install -r requirements.txt
-        ```
-    4. Download datasets and place them correctly.
-        * Create the `data/raw/` directory if it doesn't already exist.
-        * CREMA-D
-            * Download the audio `.wav` files from [Kaggle](https://www.kaggle.com/datasets/ejlok1/cremad) or your source of choice.
-            * Place the `.wav` files directly inside `data/raw/crema-d/`.
-        * IEMOCAP (optional for now)
-            * Apply for access via https://sail.usc.edu/iemocap/.
-            * Once approved, download and extract the files, and place the `.wav` files directly inside `data/raw/iemocap/`.
-            * Additionally, download this `.csv` file from [Kaggle](https://www.kaggle.com/datasets/samuelsamsudinng/iemocap-emotion-speech-database) and place it directly in `data/metadata/`. 
-    5. Extract features from the raw audio:
-        ```bash
-        cd src
-        python extract_features.py
-        ```
-    6. Train your model (choose one):
-        ```bash
-        python train_mfcc_only.py       # MFCC-only model
-        python train_spec_only.py       # Spectrogram-only model
-        python train_dual_input.py      # Combined model (best so far, USE THIS ONE)
-        ```
-    7. Evaluate model performance:
-        ```bash
-        python evaluate.py
-        ```
-    8. Launch the app and upload a `.wav` file to test emotion detection:
-        ```bash
-        python app.py
-        ```
+1. Clone the repository.
+2. Create a virtual environment (recommended):
+    ```bash
+    python -m venv venv
+    source venv/bin/activate # On Windows use `venv\Scripts\activate`
+    ```
+3. Install the required libraries:
+    ```bash
+    pip install -r requirements.txt
+    ```
+4. Download datasets and place them correctly.
+    * Create the `data/raw/` directory if it doesn't already exist.
+    * CREMA-D
+        * Download the audio `.wav` files from [Kaggle](https://www.kaggle.com/datasets/ejlok1/cremad) or your source of choice.
+        * Place the `.wav` files directly inside `data/raw/crema-d/`.
+    * IEMOCAP (optional for now)
+        * Apply for access via https://sail.usc.edu/iemocap/.
+        * Once approved, download and extract the files, and place the `.wav` files directly inside `data/raw/iemocap/`.
+        * Additionally, download this `.csv` file from [Kaggle](https://www.kaggle.com/datasets/samuelsamsudinng/iemocap-emotion-speech-database) and place it directly in `data/metadata/`. 
+5. Extract features from the raw audio:
+    ```bash
+    cd src
+    python extract_features.py
+    ```
+6. Train your model (choose one):
+    ```bash
+    python train_mfcc_only.py       # MFCC-only model
+    python train_spec_only.py       # Spectrogram-only model
+    python train_dual_input.py      # Combined model (best so far, USE THIS ONE)
+    ```
+7. Evaluate model performance:
+    ```bash
+    python evaluate.py
+    ```
+8. Launch the app and upload a `.wav` file to test emotion detection:
+    ```bash
+    python app.py
+    ```
 
 ## Usage
 
