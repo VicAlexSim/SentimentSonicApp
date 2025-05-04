@@ -1,4 +1,5 @@
-# written to evaluate train.py (the combined model)
+# written to evaluate train.py (the combined model), 
+# modify if running mfcc or spec only models
 
 import numpy as np
 import os

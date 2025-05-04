@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SentimentSonic</title>
+</head>
+<body>
+  <h2>Upload Audio for Emotion Detection</h2>
+  <form action="/predict" method="post" enctype="multipart/form-data">
+    <input type="file" name="audio_file" accept=".wav" required />
+    <button type="submit">Analyze Emotion</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Predicted Emotion: {{ prediction }}</h3>
+  {% endif %}
+</body>
+</html>

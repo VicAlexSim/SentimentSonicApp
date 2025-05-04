@@ -79,7 +79,7 @@ checkpoint = ModelCheckpoint(MODEL_SAVE_PATH, save_best_only=True, monitor='val_
 history = model.fit(
     [mfcc_train, spec_train], y_train,
     validation_data=([mfcc_val, spec_val], y_val),
-    epochs=5,
+    epochs=20,
     batch_size=32,
     callbacks=[checkpoint],
     verbose=1,
