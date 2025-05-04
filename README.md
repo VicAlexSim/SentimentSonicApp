@@ -106,7 +106,7 @@ SentimentSonic_Project/
     ```bash
     python train_mfcc_only.py       # MFCC-only model
     python train_spec_only.py       # Spectrogram-only model
-    python train_dual_input.py      # Combined model (best so far, USE THIS ONE)
+    python train.py      # Combined model (best so far, USE THIS ONE)
     ```
 4. **Evaluate Model Performance:**
     ```bash
