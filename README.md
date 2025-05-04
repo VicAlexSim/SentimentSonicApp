@@ -90,31 +90,29 @@ SentimentSonic_Project/
         * Apply for access via https://sail.usc.edu/iemocap/.
         * Once approved, download and extract the files, and place the `.wav` files directly inside `data/raw/iemocap/`.
         * Additionally, download this `.csv` file from [Kaggle](https://www.kaggle.com/datasets/samuelsamsudinng/iemocap-emotion-speech-database) and place it directly in `data/metadata/`. 
-5. Extract features from the raw audio:
+
+## Usage
+
+1. **Data Preprocessing:**
     ```bash
     cd src
+    python data_loader.py
+    ```
+2. **Extract Audio Features (MFCCs + Spectrograms)**
+    ```bash
     python extract_features.py
     ```
-6. Train your model (choose one):
+3. **Train the Model (choose one):**
     ```bash
     python train_mfcc_only.py       # MFCC-only model
     python train_spec_only.py       # Spectrogram-only model
     python train_dual_input.py      # Combined model (best so far, USE THIS ONE)
     ```
-7. Evaluate model performance:
+4. **Evaluate Model Performance:**
     ```bash
     python evaluate.py
     ```
-8. Launch the app and upload a `.wav` file to test emotion detection:
+5. **Run the Web App** (upload a `.wav` file to test):
     ```bash
     python app.py
     ```
-
-## Usage
-
-*(Instructions on how to run data preprocessing, training, and evaluation scripts will be added here later.)*
-
-*   **Data Preprocessing:** `python src/data_loader.py ...` (Define arguments)
-*   **Training:** `python src/train.py ...` (Define arguments)
-*   **Evaluation:** `python src/evaluate.py ...` (Define arguments)
-
