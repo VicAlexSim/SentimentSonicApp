@@ -100,7 +100,7 @@ SentimentSonic_Project/
     ```
 2. **Extract Audio Features (MFCCs + Spectrograms)**
     ```bash
-    python extract_features.py
+    python feature_extractor.py
     ```
 3. **Train the Model (choose one):**
     ```bash

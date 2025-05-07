@@ -16,7 +16,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 model = load_model(MODEL_PATH)
 
 # Label map (update if needed)
-LABELS = ['anger', 'happy', 'neutral', 'sad']
+LABELS = ['anger', 'happy', 'neutral', 'sad', 'frustration']
 
 def extract_features(file_path):
     # Load audio and extract MFCCs and Spectrogram

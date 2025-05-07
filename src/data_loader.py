@@ -23,13 +23,13 @@ def find_audio_files(data_dir):
 
     # 1. IEMOCAP (CSV is in ../data/metadata/)
     iemocap_metadata_path = os.path.join('../data/metadata/iemocap_full_dataset.csv')
-    iemocap_audio_root = os.path.join(data_dir, "iemocap", "iemocap_full_database")
+    iemocap_audio_root = os.path.join(data_dir, "iemocap")
 
     if os.path.exists(iemocap_metadata_path) and os.path.exists(iemocap_audio_root):
         df = pd.read_csv(iemocap_metadata_path)
         target_emotions = ['fru', 'ang', 'neu', 'hap', 'sad']
         df = df[df['emotion'].isin(target_emotions)]
-        df['full_path'] = df['path'].apply(lambda p: os.path.normpath(os.path.join(data_dir, "iemocap", "iemocap_full_database", p)))
+        df['full_path'] = df['path'].apply(lambda p: os.path.normpath(os.path.join(iemocap_audio_root, p)))
         audio_files += df['full_path'].tolist()
         labels += df['emotion'].tolist()
         print(f"IEMOCAP: Loaded {len(df)} labeled files.")
