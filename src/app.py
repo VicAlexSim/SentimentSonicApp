@@ -8,31 +8,30 @@ import uuid
 UPLOAD_FOLDER = '../uploads/'
 MODEL_PATH = '../results/models/emotion_dual_model.h5'
 
-# Flask setup
+# flask setup
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Load model
 model = load_model(MODEL_PATH)
 
-# Label map (update if needed)
+# label map
 LABELS = ['anger', 'happy', 'neutral', 'sad', 'frustration']
 
 def extract_features(file_path):
-    # Load audio and extract MFCCs and Spectrogram
+    # load audio and extract MFCCs and Spectrogram
     y, sr = librosa.load(file_path, sr=16000)
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
     spec = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
     
-    # Pad or truncate
+    # pad or truncate
     mfcc = librosa.util.fix_length(mfcc, size=400, axis=1)
     spec = librosa.util.fix_length(spec, size=400, axis=1)
 
-    # Reshape for model input
+    # transpose for model input
     mfcc = np.transpose(mfcc, (1, 0))[np.newaxis, ..., np.newaxis]
     spec = np.transpose(spec, (1, 0))[np.newaxis, ..., np.newaxis]
 
-    # Normalize (same as training)
+    # normalize
     mfcc = (mfcc - np.mean(mfcc)) / (np.std(mfcc) + 1e-7)
     spec = (spec - np.mean(spec)) / (np.std(spec) + 1e-7)
     

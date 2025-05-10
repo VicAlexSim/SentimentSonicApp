@@ -1,21 +1,20 @@
-## Template code for now 
-## For feature extraction of audio files that are already segmented and preprocessed
+## feature extraction of audio that was segmented and preprocessed
 
 import librosa
 import numpy as np
 import os
 
-# Define constants (consider moving to a config file later)
+# constants
 SAMPLE_RATE = 16000
-N_MFCC = 13       # Number of MFCCs to return
-N_FFT = 2048      # Window size for FFT
-HOP_LENGTH = 512  # Hop length for FFT
-N_MELS = 128      # Number of Mel bands for spectrogram
+N_MFCC = 13       # num of MFCCs
+N_FFT = 2048
+HOP_LENGTH = 512
+N_MELS = 128      # num of mel bands for spectrogram
 
 PROCESSED_DATA_DIR = '../data/processed/'
-FEATURES_DIR = '../data/features/' # New directory for features
-MAX_MFCC_TIME_STEPS = 400  # Adjust based on your segment length
-MAX_SPEC_TIME_STEPS = 400  # Same here (just to keep shapes aligned)
+FEATURES_DIR = '../data/features/'
+MAX_MFCC_TIME_STEPS = 400 
+MAX_SPEC_TIME_STEPS = 400
 
 def pad_or_truncate_feature(feature, max_len):
     """
@@ -37,11 +36,7 @@ def extract_mfcc(audio_segment, sr=SAMPLE_RATE, n_mfcc=N_MFCC, n_fft=N_FFT, hop_
     """
     try:
         mfccs = librosa.feature.mfcc(y=audio_segment, sr=sr, n_mfcc=n_mfcc, n_fft=n_fft, hop_length=hop_length)
-        # Optionally add delta features
-        # delta_mfccs = librosa.feature.delta(mfccs)
-        # delta2_mfccs = librosa.feature.delta(mfccs, order=2)
-        # mfccs_features = np.concatenate((mfccs, delta_mfccs, delta2_mfccs))
-        return mfccs # or mfccs_features
+        return mfccs
     except Exception as e:
         print(f"Error extracting MFCCs: {e}")
         return None
@@ -53,7 +48,6 @@ def extract_spectrogram(audio_segment, sr=SAMPLE_RATE, n_fft=N_FFT, hop_length=H
     """
     try:
         mel_spectrogram = librosa.feature.melspectrogram(y=audio_segment, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
-        # Convert to decibels (log scale)
         log_mel_spectrogram = librosa.power_to_db(mel_spectrogram, ref=np.max)
         return log_mel_spectrogram
     except Exception as e:
@@ -67,7 +61,7 @@ def process_features(processed_data_dir, features_dir):
     """
     print("Starting feature extraction...")
     segments_path = os.path.join(processed_data_dir, 'segments.npy')
-    labels_path = os.path.join(processed_data_dir, 'labels.npy') # Keep labels aligned
+    labels_path = os.path.join(processed_data_dir, 'labels.npy') # align labels
 
     if not os.path.exists(segments_path) or not os.path.exists(labels_path):
         print(f"Processed data not found at {processed_data_dir}. Run data_loader.py first.")
@@ -86,7 +80,7 @@ def process_features(processed_data_dir, features_dir):
         spectrogram = extract_spectrogram(segment)
 
         if mfcc is not None and spectrogram is not None:
-            # Pad or truncate to consistent time steps
+            # pad or truncate
             mfcc_padded = pad_or_truncate_feature(mfcc, MAX_MFCC_TIME_STEPS)
             spec_padded = pad_or_truncate_feature(spectrogram, MAX_SPEC_TIME_STEPS)
 
@@ -100,19 +94,14 @@ def process_features(processed_data_dir, features_dir):
         print("No features were extracted successfully.")
         return
 
-    # Ensure features directory exists
     os.makedirs(features_dir, exist_ok=True)
 
-    # Save features (consider padding/truncating features to have consistent dimensions if needed for models)
-    # Note: Saving lists of arrays might require different handling (e.g., saving each as separate file or padding)
-    # For simplicity, saving as .npy assuming consistent shapes or handling downstream
+    # save features
     mfccs_path = os.path.join(features_dir, 'mfccs.npy')
     spectrograms_path = os.path.join(features_dir, 'spectrograms.npy')
-    feature_labels_path = os.path.join(features_dir, 'feature_labels.npy') # Labels corresponding to features
+    feature_labels_path = os.path.join(features_dir, 'feature_labels.npy')
 
-    # Need to ensure features have consistent shapes before saving as single array
-    # This might involve padding or choosing a fixed length
-    # Placeholder: Save as object array, requires careful loading later
+    # make sure features have consistent shapes before saving as array
     np.save(mfccs_path, np.array(all_mfccs), allow_pickle=False)
     np.save(spectrograms_path, np.array(all_spectrograms), allow_pickle=False)
     np.save(feature_labels_path, np.array(valid_labels))
@@ -124,5 +113,4 @@ def process_features(processed_data_dir, features_dir):
 
 
 if __name__ == "__main__":
-    # Assuming script is run from the 'src' directory:
     process_features(PROCESSED_DATA_DIR, FEATURES_DIR)

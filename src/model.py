@@ -1,11 +1,10 @@
-## Template code for now
-## For building CNN, LSTM, and CNN-LSTM models for emotion recognition from audio features
+## building CNN, LSTM, and CNN-LSTM models for emotion recognition
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import (
     Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout,
-    LSTM, Bidirectional, TimeDistributed, BatchNormalization, Activation  # 👈 make sure Activation is included
+    LSTM, Bidirectional, TimeDistributed, BatchNormalization, Activation
 )
 
 def build_mfcc_branch(input_tensor):
@@ -47,7 +46,7 @@ def build_cnn_model(input_shape, num_classes):
         MaxPooling2D(pool_size=(2, 2)),
         Dropout(0.25),
 
-        Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same'),  # This is where it crashed before
+        Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same'),
         BatchNormalization(),
         MaxPooling2D(pool_size=(2, 2)),
         Dropout(0.25),
@@ -71,9 +70,9 @@ def build_lstm_model(input_shape, num_classes):
     """
     model = Sequential([
         Input(shape=input_shape),
-        LSTM(64, return_sequences=True), # Return sequences for stacking LSTMs
+        LSTM(64, return_sequences=True), # return sequences for stacking LSTMs
         Dropout(0.3),
-        LSTM(64, return_sequences=False), # Only last output for classification
+        LSTM(64, return_sequences=False), # only last output for classification
         Dropout(0.3),
         Dense(64, activation='relu'),
         Dropout(0.5),
@@ -93,7 +92,7 @@ def build_cnn_lstm_model(input_shape, num_classes):
     """
     inputs = Input(shape=input_shape)
 
-    # CNN part to extract spatial features (treat time axis of spectrogram as width)
+    # CNN part to extract spatial features
     x = Conv2D(32, (3, 3), padding='same')(inputs)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
@@ -106,20 +105,14 @@ def build_cnn_lstm_model(input_shape, num_classes):
     x = MaxPooling2D(pool_size=(2, 2))(x)
     x = Dropout(0.25)(x)
 
-    # Reshape features to be sequence for LSTM
-    # Shape after CNN might be (batch, height', width', channels')
-    # We need (batch, timesteps, features) for LSTM
-    # Example: Reshape based on pooling layers applied
-    # This reshape depends heavily on the CNN architecture and input shape
-    # Reshape CNN output (batch, height, width, channels) → (batch, width, height * channels)
     shape = tf.keras.backend.int_shape(x)
     x = tf.keras.layers.Reshape((shape[2], shape[1] * shape[3]))(x)
 
-    # LSTM part to process temporal sequence
-    x = Bidirectional(LSTM(64, return_sequences=False))(x) # Use Bidirectional for context
+    # LSTM
+    x = Bidirectional(LSTM(64, return_sequences=False))(x) # use bidirectional for context
     x = Dropout(0.3)(x)
 
-    # Final classification layers
+    # final classification layers
     x = Dense(64, activation='relu')(x)
     x = Dropout(0.5)(x)
     outputs = Dense(num_classes, activation='softmax')(x)
@@ -133,17 +126,17 @@ def build_cnn_lstm_model(input_shape, num_classes):
 
 
 if __name__ == '__main__':
-    # Example instantiation (replace with actual shapes and num_classes)
-    num_emotion_classes = 5 # Example: frustration, anger, neutral, happy, sad
+    # instantiation
+    num_emotion_classes = 5 # frustration, anger, neutral, happy, sad
 
-    # For Spectrogram-based CNN/CNN-LSTM
-    spectrogram_height = 128     # Mel bands
-    spectrogram_width = 400      # Time steps
+    # spectrogram-based CNN/CNN-LSTM
+    spectrogram_height = 128     # mel bands
+    spectrogram_width = 400      # time steps
     spectrogram_channels = 1
     cnn_input_shape = (spectrogram_height, spectrogram_width, spectrogram_channels)
 
-    # For MFCC-based LSTM
-    mfcc_timesteps = 400         # Time steps
+    # MFCC-based LSTM
+    mfcc_timesteps = 400         # time steps
     mfcc_features = 13           # MFCC coefficients
     lstm_input_shape = (mfcc_timesteps, mfcc_features)
 
