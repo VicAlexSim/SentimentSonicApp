@@ -68,25 +68,51 @@ SentimentSonic_Project/
     └── plots/                # Generated plots (e.g., confusion matrix, loss curves)
 
 
-## Setup
 
-1.  Clone the repository (if applicable).
-2.  Create a virtual environment (recommended):
+## Setup
+ 
+1. Clone the repository.
+2. Create a virtual environment (recommended):
     ```bash
     python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    source venv/bin/activate # On Windows use `venv\Scripts\activate`
     ```
-3.  Install the required libraries:
+3. Install the required libraries:
     ```bash
     pip install -r requirements.txt
     ```
-4.  Download the chosen datasets (e.g., IEMOCAP, CREMA-D) and place them in the `data/raw/` directory.
+4. Download datasets and place them correctly.
+    * Create the `data/raw/` directory if it doesn't already exist.
+    * CREMA-D
+        * Download the audio `.wav` files from [Kaggle](https://www.kaggle.com/datasets/ejlok1/cremad) or your source of choice.
+        * Place the `.wav` files directly inside `data/raw/crema-d/`.
+    * IEMOCAP (optional for now)
+        * Apply for access via https://sail.usc.edu/iemocap/.
+        * Once approved, download and extract the files, and place the `.wav` files directly inside `data/raw/iemocap/`.
+        * Additionally, download this `.csv` file from [Kaggle](https://www.kaggle.com/datasets/samuelsamsudinng/iemocap-emotion-speech-database) and place it directly in `data/metadata/`. 
 
 ## Usage
 
-*(Instructions on how to run data preprocessing, training, and evaluation scripts will be added here later.)*
-
-*   **Data Preprocessing:** `python src/data_loader.py ...` (Define arguments)
-*   **Training:** `python src/train.py ...` (Define arguments)
-*   **Evaluation:** `python src/evaluate.py ...` (Define arguments)
-
+1. **Data Preprocessing:**
+    ```bash
+    cd src
+    python data_loader.py
+    ```
+2. **Extract Audio Features (MFCCs + Spectrograms)**
+    ```bash
+    python feature_extractor.py
+    ```
+3. **Train the Model (choose one):**
+    ```bash
+    python train_mfcc_only.py       # MFCC-only model
+    python train_spec_only.py       # Spectrogram-only model
+    python train.py      # Combined model (best so far, USE THIS ONE)
+    ```
+4. **Evaluate Model Performance:**
+    ```bash
+    python evaluate.py
+    ```
+5. **Run the Web App** (upload a `.wav` file to test):
+    ```bash
+    python app.py
+    ```

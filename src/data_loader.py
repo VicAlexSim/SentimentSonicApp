@@ -1,53 +1,80 @@
-## Template code for now 
-## For loading datasets, segmenting audio files, and preprocessing them for emotion recognition
-
 import os
 import librosa
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-# Define constants (consider moving to a config file later)
+# constants
 RAW_DATA_DIR = '../data/raw/'
 PROCESSED_DATA_DIR = '../data/processed/'
-SAMPLE_RATE = 16000 # Standard sample rate
-SEGMENT_LENGTH_SEC = 3 # Example segment length
+SAMPLE_RATE = 16000 # standard sample rate
+SEGMENT_LENGTH_SEC = 3 # segment length
 
 def find_audio_files(data_dir):
     """
-    Recursively finds all audio files (e.g., .wav) in the specified directory.
-    Needs implementation based on dataset structure (IEMOCAP/CREMA-D).
-    Returns a list of file paths and potentially corresponding labels.
+    Loads audio paths and labels from IEMOCAP metadata and from CREMA-D filenames.
+    Returns two lists: file paths and emotion labels.
     """
-    print(f"Searching for audio files in: {data_dir}")
-    # Placeholder: Replace with actual logic for IEMOCAP/CREMA-D parsing
     audio_files = []
     labels = []
-    # Example: Iterate through subfolders, parse filenames or metadata files
-    # for root, dirs, files in os.walk(data_dir):
-    #     for file in files:
-    #         if file.endswith('.wav'):
-    #             filepath = os.path.join(root, file)
-    #             label = parse_label_from_filepath(filepath) # Needs implementation
-    #             audio_files.append(filepath)
-    #             labels.append(label)
-    print("Placeholder: Implement actual file finding and label parsing logic.")
+
+    # IEMOCAP (use metadata CSV)
+    iemocap_metadata_path = os.path.join('../data/metadata/iemocap_full_dataset.csv')
+    iemocap_audio_root = os.path.join(data_dir, "iemocap")
+
+    if os.path.exists(iemocap_metadata_path) and os.path.exists(iemocap_audio_root):
+        df = pd.read_csv(iemocap_metadata_path)
+        target_emotions = ['fru', 'ang', 'neu', 'hap', 'sad']
+        df = df[df['emotion'].isin(target_emotions)]
+        df['full_path'] = df['path'].apply(lambda p: os.path.normpath(os.path.join(iemocap_audio_root, p)))
+        audio_files += df['full_path'].tolist()
+        labels += df['emotion'].tolist()
+        print(f"IEMOCAP: Loaded {len(df)} labeled files.")
+
+    # CREMA-D
+    crema_dir = os.path.join(data_dir, 'crema-d')
+    if os.path.exists(crema_dir):
+        for file in os.listdir(crema_dir):
+            if file.endswith('.wav'):
+                label = parse_label_from_filepath(file)
+                if label in ['anger', 'happy', 'sad', 'neutral', 'frustration']:
+                    audio_files.append(os.path.join(crema_dir, file))
+                    labels.append(label)
+        print(f"CREMA-D: Loaded {len(audio_files)} files after filtering.")
+
+    # normalize label names (for both IEMOCAP and CREMA-D datasets)
+    label_map = {
+        'fru': 'frustration',
+        'ang': 'anger',
+        'neu': 'neutral',
+        'hap': 'happy',
+        'sad': 'sad',
+        'frustration': 'frustration',
+        'anger': 'anger',
+        'neutral': 'neutral',
+        'happy': 'happy',
+        'sad': 'sad'
+    }
+
+    labels = [label_map.get(lbl, lbl) for lbl in labels]
+
     return audio_files, labels
 
-def parse_label_from_filepath(filepath):
+def parse_label_from_filepath(filename):
     """
-    Extracts the emotion label from the file path or associated metadata.
-    This will be specific to the dataset being used (IEMOCAP/CREMA-D).
-    Needs implementation.
+    Extract emotion code from CREMA-D filename, e.g., '1001_IEO_ANG_XX.wav' → 'ANG' → 'anger'
     """
-    # Placeholder: Implement logic based on dataset naming conventions or metadata
-    # Example for CREMA-D (hypothetical): '1001_IEO_ANG_XX.wav' -> 'ANG' (Anger)
-    filename = os.path.basename(filepath)
     parts = filename.split('_')
     if len(parts) > 2:
         emotion_code = parts[2]
-        # Map code to desired label (e.g., 'ANG' -> 'anger', 'FRU' -> 'frustration')
-        emotion_map = {'ANG': 'anger', 'HAP': 'happy', 'SAD': 'sad', 'NEU': 'neutral', 'FRU': 'frustration'} # Add others
+        emotion_map = {
+            'ANG': 'anger',
+            'HAP': 'happy',
+            'SAD': 'sad',
+            'NEU': 'neutral',
+            'DIS': 'disgust',
+            'FEA': 'fear'
+        }
         return emotion_map.get(emotion_code, 'unknown')
     return 'unknown'
 
@@ -60,29 +87,28 @@ def load_and_segment_audio(filepath, sr=SAMPLE_RATE, segment_len_sec=SEGMENT_LEN
     """
     segments = []
     try:
-        # Load audio file
+        # load audio
         audio, current_sr = librosa.load(filepath, sr=None, mono=True) # Load original SR
 
-        # Resample if necessary
         if current_sr != sr:
             audio = librosa.resample(audio, orig_sr=current_sr, target_sr=sr)
 
-        # Calculate segment length in samples
+        # calculate segment length
         segment_len_samples = int(segment_len_sec * sr)
 
-        # Pad audio if it's shorter than segment length
+        # pad audio if already shorter than segment length
         if len(audio) < segment_len_samples:
              padding = segment_len_samples - len(audio)
              audio = np.pad(audio, (0, padding), 'constant')
 
-        # Create segments
+        # create segments
         num_segments = int(np.ceil(len(audio) / segment_len_samples))
         for i in range(num_segments):
             start = i * segment_len_samples
             end = start + segment_len_samples
             segment = audio[start:end]
 
-            # Ensure segment is exactly the required length (handle last segment)
+            # make sure segment is the required length
             if len(segment) < segment_len_samples:
                  padding = segment_len_samples - len(segment)
                  segment = np.pad(segment, (0, padding), 'constant')
@@ -91,7 +117,7 @@ def load_and_segment_audio(filepath, sr=SAMPLE_RATE, segment_len_sec=SEGMENT_LEN
 
     except Exception as e:
         print(f"Error loading or processing {filepath}: {e}")
-        return [] # Return empty list on error
+        return []
 
     return segments
 
@@ -100,18 +126,15 @@ def preprocess_audio_segment(segment, sr=SAMPLE_RATE):
     Applies preprocessing steps like noise reduction (optional) and normalization.
     Placeholder for now.
     """
-    # 1. Noise Reduction (Optional - requires specific libraries/techniques)
-    # Example: spectral gating, Wiener filter (can be complex)
-    # segment_denoised = apply_noise_reduction(segment, sr)
 
-    # 2. Normalization (e.g., peak normalization)
+    # normalization
     peak_val = np.max(np.abs(segment))
     if peak_val > 0:
         segment_normalized = segment / peak_val
     else:
-        segment_normalized = segment # Avoid division by zero
+        segment_normalized = segment # avoid dividing by zero
 
-    return segment_normalized # or segment_denoised if implemented
+    return segment_normalized
 
 def process_dataset(raw_data_dir, processed_data_dir, sr=SAMPLE_RATE, segment_len_sec=SEGMENT_LENGTH_SEC):
     """
@@ -127,7 +150,7 @@ def process_dataset(raw_data_dir, processed_data_dir, sr=SAMPLE_RATE, segment_le
 
     all_segments = []
     all_labels = []
-    file_origins = [] # Keep track of which file segment came from
+    file_origins = []
 
     for filepath, label in zip(audio_files, labels):
         print(f"Processing: {filepath} with label: {label}")
@@ -142,16 +165,14 @@ def process_dataset(raw_data_dir, processed_data_dir, sr=SAMPLE_RATE, segment_le
         print("No segments were processed successfully.")
         return
 
-    # Convert to NumPy arrays
+    # convert to NumPy arrays
     all_segments = np.array(all_segments)
     all_labels = np.array(all_labels)
     file_origins = np.array(file_origins)
 
-    # Ensure processed data directory exists
     os.makedirs(processed_data_dir, exist_ok=True)
 
-    # Save processed data (consider saving as .npy or in a structured format)
-    # Example: Save segments and labels separately
+    # save processed data
     segments_path = os.path.join(processed_data_dir, 'segments.npy')
     labels_path = os.path.join(processed_data_dir, 'labels.npy')
     origins_path = os.path.join(processed_data_dir, 'origins.npy')
@@ -165,17 +186,5 @@ def process_dataset(raw_data_dir, processed_data_dir, sr=SAMPLE_RATE, segment_le
     print(f"Saved labels to: {labels_path}")
     print(f"Saved origins to: {origins_path}")
 
-    # Optional: Create train/validation/test splits here or later
-    # X_train, X_test, y_train, y_test = train_test_split(all_segments, all_labels, test_size=0.2, random_state=42, stratify=all_labels)
-    # print("Data split into train/test sets.")
-    # Save splits if needed
-
 if __name__ == "__main__":
-    # Example usage:
-    # Make sure the paths are correct relative to where you run the script from
-    # If running from SentimentSonic_Project/src/, use '../data/raw/' etc.
-    # If running from SentimentSonic_Project/, use 'data/raw/' etc.
-    # Adjust RAW_DATA_DIR and PROCESSED_DATA_DIR accordingly or use absolute paths.
-
-    # Assuming script is run from the 'src' directory:
     process_dataset(RAW_DATA_DIR, PROCESSED_DATA_DIR)
